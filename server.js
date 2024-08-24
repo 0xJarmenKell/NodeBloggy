@@ -1,23 +1,31 @@
-const express = require('express')
-const mongoose = require('mongoose')
-const Article = require('./models/article')
-const articleRouter = require('./routes/articles')
-const methodOverride = require('method-override')
-const app = express()
+const express = require('express');
+const articleRouter = require('./routes/articles');
+const Article = require('./models/article.model');
+require('dotenv').config();
+const mongoose = require('mongoose');
+const app = express();
 
-mongoose.connect('mongodb://localhost/blog', {
-  useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true
-})
+const port = process.env.PORT || 5000;
 
-app.set('view engine', 'ejs')
-app.use(express.urlencoded({ extended: false }))
-app.use(methodOverride('_method'))
+// Set View Templating
+app.set('view engine', 'ejs');
 
+mongoose.connect(process.env.MONGODB_URL).then(()=> {
+    console.log("connected to the DataBase Successfully...");
+}).catch((err) => {
+    console.log(err);
+});
+
+app.use(express.urlencoded({ extended: false }));
+app.use('/articles',articleRouter);
+
+// Basic Routing 
 app.get('/', async (req, res) => {
-  const articles = await Article.find().sort({ createdAt: 'desc' })
-  res.render('articles/index', { articles: articles })
-})
+    const articles = await Article.find().sort({ date: 'desc' });
+  res.render('articles/index', { articles: articles });
+});
 
-app.use('/articles', articleRouter)
-
-app.listen(5000)
+// Specifying special port for server listening..
+app.listen(port, () =>{
+    console.log(`Server is up and running on port: ${port}`);
+});
